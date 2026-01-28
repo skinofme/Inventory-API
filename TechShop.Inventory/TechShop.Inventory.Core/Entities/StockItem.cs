@@ -31,28 +31,36 @@ namespace TechShop.Inventory.Core.Entities
 
 		#region	CONSTRUCTORS
 
-		protected StockItem() { }
+		private StockItem() { }
 
 		// Constructor to create a new entity
-		public StockItem(string sku, int idWarehouse)
+		public static StockItem Create(string sku, int idWarehouse)
 		{
+			var stockItem = new StockItem();
+
 			if (string.IsNullOrWhiteSpace(sku)) throw new InvalidSkuException(sku);
 			if (idWarehouse <= 0) throw new InvalidIdWarehouseException(idWarehouse);
 
-			Sku = sku;
-			IdWarehouse = idWarehouse;
-			QuantityAvailable = 0;
-			QuantityReserved = 0;
+			stockItem.Sku = sku;
+			stockItem.IdWarehouse = idWarehouse;
+			stockItem.QuantityAvailable = 0;
+			stockItem.QuantityReserved = 0;
+			
+			return stockItem;
 		}
 
 		// Constructor to rehydrate a entity
-		internal StockItem(int idStockItem, int idWarehouse, string sku, int quantityAvailable, int quantityReserved)
+		internal StockItem Rehydrate(int idStockItem, int idWarehouse, string sku, int quantityAvailable, int quantityReserved)
 		{
-			IdStockItem = idStockItem;
-			IdWarehouse = idWarehouse;
-			Sku = sku;
-			QuantityAvailable = quantityAvailable;
-			QuantityReserved = quantityReserved;
+			var stockItem = new StockItem();
+
+			stockItem.IdStockItem = idStockItem;
+			stockItem.IdWarehouse = idWarehouse;
+			stockItem.Sku = sku;
+			stockItem.QuantityAvailable = quantityAvailable;
+			stockItem.QuantityReserved = quantityReserved;
+
+			return stockItem;
 		}
 		#endregion
 
