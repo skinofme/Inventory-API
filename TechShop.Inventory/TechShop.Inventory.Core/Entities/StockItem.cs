@@ -50,7 +50,7 @@ namespace TechShop.Inventory.Core.Entities
 		}
 
 		// Constructor to rehydrate a entity
-		internal StockItem Rehydrate(int idStockItem, int idWarehouse, string sku, int quantityAvailable, int quantityReserved)
+		internal static StockItem Rehydrate(int idStockItem, int idWarehouse, string sku, int quantityAvailable, int quantityReserved)
 		{
 			var stockItem = new StockItem();
 
