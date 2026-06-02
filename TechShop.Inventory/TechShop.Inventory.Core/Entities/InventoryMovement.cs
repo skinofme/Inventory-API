@@ -15,14 +15,14 @@ namespace TechShop.Inventory.Core.Entities
 
 		public MovementType MovementType { get; private set; }
 		public int Quantity { get; private set; }
-		public string Reason {  get; private set; }
+		public string? Reason {  get; private set; }
 
-		public string ReferenceId { get; private set; }
+		public string? ReferenceId { get; private set; }
 
 
 
 		// Constructor to create a new entity
-		public InventoryMovement(int idStockItem, MovementType movementType, int quantity, string reason, string referenceId)
+		public InventoryMovement(int idStockItem, MovementType movementType, int quantity, string? reason, string? referenceId)
 		{
 			IdStockItem = idStockItem;
 			MovementType = movementType;
@@ -32,7 +32,7 @@ namespace TechShop.Inventory.Core.Entities
 		}
 
 		// Constructor to rehydrate a entity
-		internal InventoryMovement(int idInventoryMovement, int idStockItem, MovementType movementType, int quantity, string reason, string referenceId)
+		internal InventoryMovement(int idInventoryMovement, int idStockItem, MovementType movementType, int quantity, string? reason, string? referenceId)
 		{
 			IdInventoryMovement = idInventoryMovement;
 			IdStockItem = idStockItem;
