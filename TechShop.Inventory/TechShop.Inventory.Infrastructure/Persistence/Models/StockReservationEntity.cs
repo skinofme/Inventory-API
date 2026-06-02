@@ -5,9 +5,9 @@ namespace TechShop.Inventory.Infrastructure.Persistence.Models;
 
 public partial class StockReservationEntity
 {
-    public int IdStockReservation { get; set; }
+    public Guid IdStockReservation { get; set; }
 
-    public int IdStockItem { get; set; }
+    public Guid IdStockItem { get; set; }
 
     public int Quantity { get; set; }
 

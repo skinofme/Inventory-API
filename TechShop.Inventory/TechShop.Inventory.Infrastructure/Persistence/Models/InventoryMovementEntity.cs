@@ -7,7 +7,7 @@ public partial class InventoryMovementEntity
 {
     public int IdInventoryMovement { get; set; }
 
-    public int IdStockItem { get; set; }
+    public Guid IdStockItem { get; set; }
 
     public string MovementType { get; set; } = null!;
 

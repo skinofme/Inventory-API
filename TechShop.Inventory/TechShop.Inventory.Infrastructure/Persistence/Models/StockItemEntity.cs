@@ -5,9 +5,9 @@ namespace TechShop.Inventory.Infrastructure.Persistence.Models;
 
 public partial class StockItemEntity
 {
-    public int IdStockItem { get; set; }
+    public Guid IdStockItem { get; set; }
 
-    public int IdWarehouse { get; set; }
+    public Guid IdWarehouse { get; set; }
 
     public string Sku { get; set; } = null!;
 

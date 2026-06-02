@@ -2,8 +2,8 @@
 {
 	public class InvalidIdStockItemException : DomainException
 	{
-		public InvalidIdStockItemException(int idStockItem)
-			:base($"Invalid requested idStockItem:{idStockItem}, cannot be equal or less than zero.")
+		public InvalidIdStockItemException(Guid idStockItem)
+			:base($"Invalid requested idStockItem:{idStockItem}, cannot be empty")
 		{}
 	}
 }

@@ -2,7 +2,7 @@
 {
 	public class StockReservationNotFoundException : DomainException
 	{
-		public StockReservationNotFoundException(int idStockReservation)
+		public StockReservationNotFoundException(Guid idStockReservation)
 			: base($"Stock reservation not found. IdStockReservation: {idStockReservation}")
 		{
 		}

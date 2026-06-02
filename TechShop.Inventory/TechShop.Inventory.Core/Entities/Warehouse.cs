@@ -5,7 +5,7 @@ namespace TechShop.Inventory.Core.Entities
 {
 	public class Warehouse
 	{
-		public int IdWarehouse { get; private set; }
+		public Guid IdWarehouse { get; private set; }
 
 		public string Code { get; private set; }
 
@@ -22,17 +22,17 @@ namespace TechShop.Inventory.Core.Entities
 			if(string.IsNullOrWhiteSpace(code)) throw new InvalidWarehouseCodeException(code);
 			if(string.IsNullOrWhiteSpace(name)) throw new InvalidNameException(name);
 			if(string.IsNullOrWhiteSpace(location)) throw new InvalidLocationException(location);
-
+			IdWarehouse = Guid.NewGuid();
 			Code = code;
 			Name = name;
 			Location = location;
 		}
 
 		// constructor to rehydrate the entity
-		internal Warehouse(int idWarehouse, string code, string name, string location)
+		internal Warehouse(Guid idWarehouse, string code, string name, string location)
 			:this(code, name, location)
 		{
-			if (idWarehouse <= 0) throw new InvalidIdException(idWarehouse);
+			if (idWarehouse == Guid.Empty) throw new InvalidIdException(idWarehouse);
 
 			IdWarehouse = idWarehouse;
 		}

@@ -5,7 +5,7 @@ GO
 USE TechShopInventory;
 
 CREATE TABLE Warehouses(
-    IdWarehouse INT IDENTITY,
+    IdWarehouse UNIQUEIDENTIFIER NOT NULL,
 	Code NVARCHAR(20) NOT NULL,
 	Name NVARCHAR(100) NOT NULL,
 	Location NVARCHAR(200) NOT NULL,
@@ -15,8 +15,8 @@ CREATE TABLE Warehouses(
 );
 
 CREATE TABLE StockItems(
-	IdStockItem INT IDENTITY,
-	IdWarehouse INT NOT NULL,
+	IdStockItem UNIQUEIDENTIFIER NOT NULL,
+	IdWarehouse UNIQUEIDENTIFIER NOT NULL,
 	Sku NVARCHAR(50) NOT NULL,
 	QuantityAvailable INT NOT NULL,
 	QuantityReserved INT NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE StockItems(
 
 CREATE TABLE InventoryMovements(
 	IdInventoryMovement INT IDENTITY,
-	IdStockItem INT NOT NULL,
+	IdStockItem UNIQUEIDENTIFIER NOT NULL,
 	MovementType NVARCHAR(20) NOT NULL, 				-- entrada, salida, reserva, liberacion, ajuste
 	Quantity INT NOT NULL,
 	CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
@@ -45,8 +45,8 @@ CREATE TABLE InventoryMovements(
 );
 
 CREATE TABLE StockReservations (
-    IdStockReservation INT IDENTITY,
-    IdStockItem INT NOT NULL,
+    IdStockReservation UNIQUEIDENTIFIER NOT NULL,
+    IdStockItem UNIQUEIDENTIFIER NOT NULL,
     Quantity INT NOT NULL,
     CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     ExpiresAt DATETIME2 NOT NULL,

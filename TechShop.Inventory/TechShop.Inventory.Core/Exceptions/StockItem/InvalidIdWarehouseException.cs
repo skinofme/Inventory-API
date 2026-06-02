@@ -2,8 +2,8 @@
 {
 	internal class InvalidIdWarehouseException : DomainException
 	{
-		public InvalidIdWarehouseException(int idWarehouse)
-			: base($"Invalid requested IdWarehouse: {idWarehouse}, cannot be equal or less than zero")
+		public InvalidIdWarehouseException(Guid idWarehouse)
+			: base($"Invalid requested IdWarehouse: {idWarehouse}, cannot be empty")
 		{ }
 	}
 }

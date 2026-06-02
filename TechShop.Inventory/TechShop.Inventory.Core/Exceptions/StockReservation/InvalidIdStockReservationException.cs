@@ -8,8 +8,8 @@ namespace TechShop.Inventory.Core.Exceptions.StockReservation
 {
 	public class InvalidIdStockReservationException : DomainException
 	{
-		public InvalidIdStockReservationException(int idStockReservation)
-			: base($"Invalid requested IdstockReservation: {idStockReservation}, cannot be equal or less than zero.")
+		public InvalidIdStockReservationException(Guid idStockReservation)
+			: base($"Invalid requested IdstockReservation: {idStockReservation}, cannot be empty")
 		{ }
 	}
 }

@@ -7,9 +7,9 @@ namespace TechShop.Inventory.Core.Entities
 {
 	public class StockReservation
 	{
-		public int IdStockReservation { get; private set; }
+		public Guid IdStockReservation { get; private set; }
 
-		public int IdStockItem { get; private set; }
+		public Guid IdStockItem { get; private set; }
 
 		public int Quantity { get; private set; }
 
@@ -19,15 +19,15 @@ namespace TechShop.Inventory.Core.Entities
 
 		public ReservationStatus Status { get; private set; }
 
-		public string Reason { get; private set; }
+		public string? Reason { get; private set; }
 
-		public string ReferenceId { get; private set; }
+		public string? ReferenceId { get; private set; }
 
 		protected StockReservation() { }
 
 		// constructor to create a new entity
 		public StockReservation(
-			int idStockItem,
+			Guid idStockItem,
 			int quantity,
 			DateTime createdAt,
 			DateTime expiresAt,
@@ -35,7 +35,7 @@ namespace TechShop.Inventory.Core.Entities
 			string referenceId)
 		{
 			ValidateConstructor(idStockItem, quantity, createdAt, expiresAt, reason, referenceId);
-
+			IdStockReservation = Guid.NewGuid();
 			IdStockItem = idStockItem;
 			Quantity = quantity;
 			CreatedAt = createdAt;
@@ -47,8 +47,8 @@ namespace TechShop.Inventory.Core.Entities
 
 		// constructor to rehydrate a entity
 		internal StockReservation(
-			int idStockReservation,
-			int idStockItem,
+			Guid idStockReservation,
+			Guid idStockItem,
 			int quantity,
 			DateTime createdAt,
 			DateTime expiresAt,
@@ -56,7 +56,7 @@ namespace TechShop.Inventory.Core.Entities
 			string reason,
 			string referenceId)
 		{
-			if (idStockReservation <= 0) throw new InvalidIdStockReservationException(idStockReservation);
+			if (idStockReservation == Guid.Empty) throw new InvalidIdStockReservationException(idStockReservation);
 			ValidateConstructor(idStockItem, quantity, createdAt, expiresAt, reason, referenceId);
 
 			IdStockReservation = idStockReservation;
@@ -108,9 +108,9 @@ namespace TechShop.Inventory.Core.Entities
 			Status = ReservationStatus.EXPIRED;
 		}
 
-		private void ValidateConstructor(int idStockItem, int quantity, DateTime createdAt, DateTime expiresAt, string reason, string referenceId)
+		private void ValidateConstructor(Guid idStockItem, int quantity, DateTime createdAt, DateTime expiresAt, string reason, string referenceId)
 		{
-			if (idStockItem <= 0) throw new InvalidIdStockItemException(idStockItem);
+			if (idStockItem == Guid.Empty) throw new InvalidIdStockItemException(idStockItem);
 			if (quantity <= 0) throw new InvalidQuantityException(quantity);
 			if (expiresAt <= createdAt) throw new InvalidExpirationDateException(expiresAt, createdAt);
 			if (string.IsNullOrWhiteSpace(reason)) throw new InvalidReasonException(reason);

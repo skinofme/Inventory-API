@@ -46,6 +46,7 @@ public partial class TechShopInventoryContext : DbContext
 
             entity.HasIndex(e => new { e.IdWarehouse, e.Sku }, "UQ_StockItems_IdWarehouse_Sku").IsUnique();
 
+            entity.Property(e => e.IdStockItem).ValueGeneratedNever();
             entity.Property(e => e.LastUpdated).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.QuantityTotal).HasComputedColumnSql("([QuantityAvailable]+[QuantityReserved])", true);
             entity.Property(e => e.Sku).HasMaxLength(50);
@@ -59,6 +60,7 @@ public partial class TechShopInventoryContext : DbContext
         {
             entity.HasKey(e => e.IdStockReservation);
 
+            entity.Property(e => e.IdStockReservation).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.Reason).HasMaxLength(200);
             entity.Property(e => e.ReferenceId).HasMaxLength(50);
@@ -78,6 +80,7 @@ public partial class TechShopInventoryContext : DbContext
 
             entity.HasIndex(e => e.Code, "UQ_Warehoses_Code").IsUnique();
 
+            entity.Property(e => e.IdWarehouse).ValueGeneratedNever();
             entity.Property(e => e.Code).HasMaxLength(20);
             entity.Property(e => e.Location).HasMaxLength(200);
             entity.Property(e => e.Name).HasMaxLength(100);

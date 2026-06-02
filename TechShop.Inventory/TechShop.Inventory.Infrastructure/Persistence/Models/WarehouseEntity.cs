@@ -5,7 +5,7 @@ namespace TechShop.Inventory.Infrastructure.Persistence.Models;
 
 public partial class WarehouseEntity
 {
-    public int IdWarehouse { get; set; }
+    public Guid IdWarehouse { get; set; }
 
     public string Code { get; set; } = null!;
 

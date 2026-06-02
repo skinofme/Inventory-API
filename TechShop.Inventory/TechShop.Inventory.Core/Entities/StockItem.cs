@@ -2,15 +2,16 @@
 using TechShop.Inventory.Core.Enums.StockReservation;
 using TechShop.Inventory.Core.Exceptions.common;
 using TechShop.Inventory.Core.Exceptions.StockItem;
+using TechShop.Inventory.Core.Exceptions.StockReservation;
 
 namespace TechShop.Inventory.Core.Entities
 {
 
 	public class StockItem
 	{
-		public int IdStockItem { get; private set; }
+		public Guid IdStockItem { get; private set; }
 
-		public int IdWarehouse { get; private set; }
+		public Guid IdWarehouse { get; private set; }
 
 		public string Sku { get; private set; }
 
@@ -34,12 +35,14 @@ namespace TechShop.Inventory.Core.Entities
 		private StockItem() { }
 
 		// Constructor to create a new entity
-		public static StockItem Create(string sku, int idWarehouse)
+		public static StockItem Create(string sku, Guid idWarehouse)
 		{
 			var stockItem = new StockItem();
 
 			if (string.IsNullOrWhiteSpace(sku)) throw new InvalidSkuException(sku);
-			if (idWarehouse <= 0) throw new InvalidIdWarehouseException(idWarehouse);
+			if (idWarehouse == Guid.Empty) throw new InvalidIdWarehouseException(idWarehouse);
+
+			stockItem.IdStockItem = Guid.NewGuid();
 
 			stockItem.Sku = sku;
 			stockItem.IdWarehouse = idWarehouse;
@@ -50,7 +53,7 @@ namespace TechShop.Inventory.Core.Entities
 		}
 
 		// Constructor to rehydrate a entity
-		internal static StockItem Rehydrate(int idStockItem, int idWarehouse, string sku, int quantityAvailable, int quantityReserved)
+		internal static StockItem Rehydrate(Guid idStockItem, Guid idWarehouse, string sku, int quantityAvailable, int quantityReserved)
 		{
 			var stockItem = new StockItem();
 
@@ -69,7 +72,7 @@ namespace TechShop.Inventory.Core.Entities
 
 		public void AddStock(int quantity)
 		{
-			validateQuantity(quantity);
+			ValidateQuantity(quantity);
 
 			QuantityAvailable += quantity;
 
@@ -78,7 +81,7 @@ namespace TechShop.Inventory.Core.Entities
 
 		public void RemoveStock(int quantity, string reason)
 		{
-			validateQuantity(quantity);
+			ValidateQuantity(quantity);
 			if (quantity > QuantityAvailable) throw new InsufficientStockException(Sku, quantity, QuantityAvailable);
 
 			QuantityAvailable -= quantity;
@@ -86,14 +89,14 @@ namespace TechShop.Inventory.Core.Entities
 			RegisterMovement(this.IdStockItem, MovementType.ADJUST, quantity, reason);
 		}
 
-		public void SellStock(int idStockReservation, DateTime now)
+		public void SellStock(Guid idStockReservation, DateTime now)
 		{
 			var reservation = _reservations.FirstOrDefault(res => res.IdStockReservation == idStockReservation)
 				?? throw new StockReservationNotFoundException(idStockReservation);
 
 			reservation.Confirm(now);
 
-			validateQuantity(reservation.Quantity);
+			ValidateQuantity(reservation.Quantity);
 			if (reservation.Quantity > QuantityReserved) throw new InsufficientStockException(Sku, reservation.Quantity, QuantityReserved);
 
 			QuantityReserved -= reservation.Quantity;
@@ -115,7 +118,7 @@ namespace TechShop.Inventory.Core.Entities
 			string referenceId)
 		{
 
-			validateQuantity(quantity);
+			ValidateQuantity(quantity);
 			if (quantity > QuantityAvailable) throw new InsufficientStockException(Sku, quantity, QuantityAvailable);
 
 			QuantityAvailable -= quantity;
@@ -135,7 +138,7 @@ namespace TechShop.Inventory.Core.Entities
 			RegisterMovement(IdStockItem, MovementType.RESERVE, reservation.Quantity, reservation.Reason, reservation.ReferenceId);
 		}
 		
-		public void CancelStockReservation(int idStockReservation)
+		public void CancelStockReservation(Guid idStockReservation)
 		{
 
 			var reservation = _reservations.FirstOrDefault(res => res.IdStockReservation == idStockReservation);
@@ -167,7 +170,7 @@ namespace TechShop.Inventory.Core.Entities
 
 		#endregion DOMAIN METHODS
 
-		private void ReleaseReservedStock(int quantity, string reason, string referenceId)
+		private void ReleaseReservedStock(int quantity, string? reason, string? referenceId)
 		{
 			// Ensure the stock invariant
 			if (quantity > QuantityReserved) throw new InsufficientStockException(Sku, quantity, QuantityReserved);
@@ -179,7 +182,7 @@ namespace TechShop.Inventory.Core.Entities
 			RegisterMovement(IdStockItem, MovementType.RELEASE, quantity, reason, referenceId);
 		}
 
-		private void RegisterMovement(int idStockItem, MovementType movementType, int quantity, string reason, string referenceId = null)
+		private void RegisterMovement(Guid idStockItem, MovementType movementType, int quantity, string? reason, string? referenceId = null)
 		{
 			var movement = new InventoryMovement(
 				idStockItem,
@@ -192,7 +195,7 @@ namespace TechShop.Inventory.Core.Entities
 			_movements.Add(movement);
 		}
 
-		private void validateQuantity(int quantity)
+		private void ValidateQuantity(int quantity)
 		{
 			if (quantity <= 0) throw new InvalidQuantityException(quantity);
 		}
