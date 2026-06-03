@@ -19,6 +19,8 @@ public partial class StockItemEntity
 
     public DateTime LastUpdated { get; set; }
 
+    public bool IsActive { get; set; }
+
     public virtual WarehouseEntity IdWarehouseNavigation { get; set; } = null!;
 
     public virtual ICollection<InventoryMovementEntity> InventoryMovements { get; set; } = new List<InventoryMovementEntity>();

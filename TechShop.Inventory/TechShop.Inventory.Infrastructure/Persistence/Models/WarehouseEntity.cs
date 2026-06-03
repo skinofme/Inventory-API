@@ -13,5 +13,7 @@ public partial class WarehouseEntity
 
     public string Location { get; set; } = null!;
 
+    public bool IsActive { get; set; }
+
     public virtual ICollection<StockItemEntity> StockItems { get; set; } = new List<StockItemEntity>();
 }

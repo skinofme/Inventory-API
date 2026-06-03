@@ -15,6 +15,9 @@ namespace TechShop.Inventory.Core.Entities
 
 		public string Sku { get; private set; }
 
+		// It indicates whether the product is available for sale.
+		// This flag is independent of stock quantity.
+		public bool IsActive { get; private set; }
 
 		public int QuantityAvailable { get; private set; }
 
@@ -46,6 +49,7 @@ namespace TechShop.Inventory.Core.Entities
 
 			stockItem.Sku = sku;
 			stockItem.IdWarehouse = idWarehouse;
+			stockItem.IsActive = true;
 			stockItem.QuantityAvailable = 0;
 			stockItem.QuantityReserved = 0;
 			
@@ -53,13 +57,14 @@ namespace TechShop.Inventory.Core.Entities
 		}
 
 		// Constructor to rehydrate a entity
-		internal static StockItem Rehydrate(Guid idStockItem, Guid idWarehouse, string sku, int quantityAvailable, int quantityReserved)
+		internal static StockItem Rehydrate(Guid idStockItem, Guid idWarehouse, string sku, int quantityAvailable, int quantityReserved, bool isActive)
 		{
 			var stockItem = new StockItem();
 
 			stockItem.IdStockItem = idStockItem;
 			stockItem.IdWarehouse = idWarehouse;
 			stockItem.Sku = sku;
+			stockItem.IsActive = isActive;
 			stockItem.QuantityAvailable = quantityAvailable;
 			stockItem.QuantityReserved = quantityReserved;
 
@@ -89,26 +94,6 @@ namespace TechShop.Inventory.Core.Entities
 			RegisterMovement(this.IdStockItem, MovementType.ADJUST, quantity, reason);
 		}
 
-		public void SellStock(Guid idStockReservation, DateTime now)
-		{
-			var reservation = _reservations.FirstOrDefault(res => res.IdStockReservation == idStockReservation)
-				?? throw new StockReservationNotFoundException(idStockReservation);
-
-			reservation.Confirm(now);
-
-			ValidateQuantity(reservation.Quantity);
-			if (reservation.Quantity > QuantityReserved) throw new InsufficientStockException(Sku, reservation.Quantity, QuantityReserved);
-
-			QuantityReserved -= reservation.Quantity;
-
-			RegisterMovement(
-				IdStockItem,
-				MovementType.OUT,
-				reservation.Quantity,
-				"Sell",
-				reservation.ReferenceId
-			);
-		}
 
 		public void ReserveStock(
 			int quantity,
@@ -117,6 +102,7 @@ namespace TechShop.Inventory.Core.Entities
 			string reason,
 			string referenceId)
 		{
+			if (!IsActive) throw new InactiveStockItemException(IdStockItem);
 
 			ValidateQuantity(quantity);
 			if (quantity > QuantityAvailable) throw new InsufficientStockException(Sku, quantity, QuantityAvailable);
@@ -138,6 +124,31 @@ namespace TechShop.Inventory.Core.Entities
 			RegisterMovement(IdStockItem, MovementType.RESERVE, reservation.Quantity, reservation.Reason, reservation.ReferenceId);
 		}
 		
+		public void SellStock(Guid idStockReservation, DateTime now)
+		{
+
+			if (!IsActive) throw new InactiveStockItemException(IdStockItem);
+
+			var reservation = _reservations.FirstOrDefault(res => res.IdStockReservation == idStockReservation)
+				?? throw new StockReservationNotFoundException(idStockReservation);
+
+			ValidateQuantity(reservation.Quantity);
+			if (reservation.Quantity > QuantityReserved) 
+				throw new InsufficientStockException(Sku, reservation.Quantity, QuantityReserved);
+
+			QuantityReserved -= reservation.Quantity;
+
+			reservation.Confirm(now);
+
+			RegisterMovement(
+				IdStockItem,
+				MovementType.OUT,
+				reservation.Quantity,
+				"Sell",
+				reservation.ReferenceId
+			);
+		}
+
 		public void CancelStockReservation(Guid idStockReservation)
 		{
 
@@ -167,9 +178,6 @@ namespace TechShop.Inventory.Core.Entities
 			}
 		}
 
-
-		#endregion DOMAIN METHODS
-
 		private void ReleaseReservedStock(int quantity, string? reason, string? referenceId)
 		{
 			// Ensure the stock invariant
@@ -181,6 +189,19 @@ namespace TechShop.Inventory.Core.Entities
 
 			RegisterMovement(IdStockItem, MovementType.RELEASE, quantity, reason, referenceId);
 		}
+
+		public void Activate()
+		{
+			if(IsActive) return;
+			IsActive = true;
+		}
+		public void Deactivate()
+		{
+			if(!IsActive) return;
+			IsActive = false;
+		}
+
+		#endregion DOMAIN METHODS
 
 		private void RegisterMovement(Guid idStockItem, MovementType movementType, int quantity, string? reason, string? referenceId = null)
 		{

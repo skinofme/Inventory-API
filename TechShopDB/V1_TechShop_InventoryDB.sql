@@ -9,6 +9,7 @@ CREATE TABLE Warehouses(
 	Code NVARCHAR(20) NOT NULL,
 	Name NVARCHAR(100) NOT NULL,
 	Location NVARCHAR(200) NOT NULL,
+	IsActive BIT NOT NULL DEFAULT 1,
 
 	CONSTRAINT PK_Warehouses PRIMARY KEY (IdWarehouse),
 	CONSTRAINT UQ_Warehoses_Code UNIQUE(Code)
@@ -22,6 +23,7 @@ CREATE TABLE StockItems(
 	QuantityReserved INT NOT NULL,
 	QuantityTotal AS (QuantityAvailable + QuantityReserved) PERSISTED,
 	LastUpdated DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+	IsActive BIT NOT NULL DEFAULT 1,
 
 	CONSTRAINT PK_StockItems PRIMARY KEY (IdStockItem),
 	CONSTRAINT FK_StockItems_Warehouses_IdWarehouse FOREIGN KEY (IdWarehouse) REFERENCES Warehouses(IdWarehouse),
@@ -52,7 +54,7 @@ CREATE TABLE StockReservations (
     ExpiresAt DATETIME2 NOT NULL,
     Status NVARCHAR(20) NOT NULL DEFAULT 'PENDING',
     Reason NVARCHAR(200),
-    ReferenceId NVARCHAR(50),            
+    ReferenceId NVARCHAR(50),
 
 	CONSTRAINT PK_StockReservations PRIMARY KEY(IdStockReservation),
 	CONSTRAINT CK_StockReservations_Status CHECK (Status IN ('PENDING', 'CONFIRMED', 'CANCELLED', 'EXPIRED')),

@@ -12,8 +12,9 @@ namespace TechShop.Inventory.Core.Entities
 		public string Name { get; private set; }
 
 		public string Location { get; private set; }
-
-
+		
+		public bool IsActive { get; private set; }
+		
 		protected Warehouse() { }
 
 		// constructor to create a new entity
@@ -26,15 +27,17 @@ namespace TechShop.Inventory.Core.Entities
 			Code = code;
 			Name = name;
 			Location = location;
+			IsActive = true;
 		}
 
 		// constructor to rehydrate the entity
-		internal Warehouse(Guid idWarehouse, string code, string name, string location)
+		internal Warehouse(Guid idWarehouse, string code, string name, string location, bool isActive)
 			:this(code, name, location)
 		{
 			if (idWarehouse == Guid.Empty) throw new InvalidIdException(idWarehouse);
 
 			IdWarehouse = idWarehouse;
+			IsActive = isActive;
 		}
 	}
 }
