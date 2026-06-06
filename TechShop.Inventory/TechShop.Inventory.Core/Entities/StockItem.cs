@@ -33,44 +33,48 @@ namespace TechShop.Inventory.Core.Entities
 		public IReadOnlyCollection<StockReservation> Reservations => _reservations;
 
 
-		#region	CONSTRUCTORS
 
 		private StockItem() { }
 
-		// Constructor to create a new entity
+		#region	FACTORY METHODS
+		
 		public static StockItem Create(string sku, Guid idWarehouse)
 		{
-			var stockItem = new StockItem();
 
+			if (idWarehouse == Guid.Empty) throw new Exceptions.StockItem.InvalidIdWarehouseException(idWarehouse);
 			if (string.IsNullOrWhiteSpace(sku)) throw new InvalidSkuException(sku);
-			if (idWarehouse == Guid.Empty) throw new InvalidIdWarehouseException(idWarehouse);
 
-			stockItem.IdStockItem = Guid.NewGuid();
+			return new StockItem()
+			{
+				IdStockItem = Guid.NewGuid(),
+				Sku = sku,
+				IdWarehouse = idWarehouse,
+				IsActive = true,
+				QuantityAvailable = 0,
+				QuantityReserved = 0
+			};
 
-			stockItem.Sku = sku;
-			stockItem.IdWarehouse = idWarehouse;
-			stockItem.IsActive = true;
-			stockItem.QuantityAvailable = 0;
-			stockItem.QuantityReserved = 0;
-			
-			return stockItem;
 		}
 
-		// Constructor to rehydrate a entity
+		
 		internal static StockItem Rehydrate(Guid idStockItem, Guid idWarehouse, string sku, int quantityAvailable, int quantityReserved, bool isActive)
 		{
-			var stockItem = new StockItem();
+			if (idStockItem == Guid.Empty) throw new InvalidIdStockItemException(idStockItem);
 
-			stockItem.IdStockItem = idStockItem;
-			stockItem.IdWarehouse = idWarehouse;
-			stockItem.Sku = sku;
-			stockItem.IsActive = isActive;
-			stockItem.QuantityAvailable = quantityAvailable;
-			stockItem.QuantityReserved = quantityReserved;
+			ValidateState(idWarehouse, sku, quantityAvailable, quantityReserved);
+			return new StockItem()
+			{
+				IdStockItem = idStockItem,
+				IdWarehouse = idWarehouse,
+				Sku = sku,
+				IsActive = isActive,
+				QuantityAvailable = quantityAvailable,
+				QuantityReserved = quantityReserved
+			};
 
-			return stockItem;
 		}
-		#endregion
+		
+		#endregion	FACTORY METHODS
 
 
 		#region DOMAIN METHODS
@@ -87,11 +91,15 @@ namespace TechShop.Inventory.Core.Entities
 		public void RemoveStock(int quantity, string reason)
 		{
 			ValidateQuantity(quantity);
-			if (quantity > QuantityAvailable) throw new InsufficientStockException(Sku, quantity, QuantityAvailable);
 
-			QuantityAvailable -= quantity;
+			if (quantity > QuantityTotal) throw new InsufficientStockException(Sku, quantity, QuantityTotal);
 
-			RegisterMovement(this.IdStockItem, MovementType.ADJUST, quantity, reason);
+			var impact = CalculateMinimalRemoveImpact(quantity);
+
+			QuantityAvailable -= impact.available;
+			QuantityReserved -= impact.reserved;
+
+			RegisterMovement(IdStockItem, MovementType.ADJUST, quantity, reason);
 		}
 
 
@@ -107,17 +115,17 @@ namespace TechShop.Inventory.Core.Entities
 			ValidateQuantity(quantity);
 			if (quantity > QuantityAvailable) throw new InsufficientStockException(Sku, quantity, QuantityAvailable);
 
-			QuantityAvailable -= quantity;
-			QuantityReserved += quantity;
-
-			var reservation = new StockReservation(
+			var reservation = StockReservation.Create(
 				IdStockItem,
 				quantity,
-				now, 
+				now,
 				now.Add(duration),
-				reason, 
+				reason,
 				referenceId
 			);
+
+			QuantityAvailable -= quantity;
+			QuantityReserved += quantity;
 
 			_reservations.Add(reservation);
 			
@@ -132,13 +140,12 @@ namespace TechShop.Inventory.Core.Entities
 			var reservation = _reservations.FirstOrDefault(res => res.IdStockReservation == idStockReservation)
 				?? throw new StockReservationNotFoundException(idStockReservation);
 
-			ValidateQuantity(reservation.Quantity);
-			if (reservation.Quantity > QuantityReserved) 
+			if (reservation.Quantity > QuantityReserved)
 				throw new InsufficientStockException(Sku, reservation.Quantity, QuantityReserved);
 
-			QuantityReserved -= reservation.Quantity;
-
 			reservation.Confirm(now);
+
+			QuantityReserved -= reservation.Quantity;
 
 			RegisterMovement(
 				IdStockItem,
@@ -152,9 +159,8 @@ namespace TechShop.Inventory.Core.Entities
 		public void CancelStockReservation(Guid idStockReservation)
 		{
 
-			var reservation = _reservations.FirstOrDefault(res => res.IdStockReservation == idStockReservation);
-
-			if (reservation == null) throw new StockReservationNotFoundException(idStockReservation);
+			var reservation = _reservations.FirstOrDefault(res => res.IdStockReservation == idStockReservation)
+				?? throw new StockReservationNotFoundException(idStockReservation);
 
 			reservation.Cancel();
 
@@ -169,6 +175,7 @@ namespace TechShop.Inventory.Core.Entities
 			);
 
 			if (stockReservations.Count == 0) return;
+
 
 			foreach (var reservation in stockReservations)
 			{
@@ -201,11 +208,13 @@ namespace TechShop.Inventory.Core.Entities
 			IsActive = false;
 		}
 
+
 		#endregion DOMAIN METHODS
+
 
 		private void RegisterMovement(Guid idStockItem, MovementType movementType, int quantity, string? reason, string? referenceId = null)
 		{
-			var movement = new InventoryMovement(
+			var movement = InventoryMovement.Create(
 				idStockItem,
 				movementType,
 				quantity,
@@ -221,6 +230,39 @@ namespace TechShop.Inventory.Core.Entities
 			if (quantity <= 0) throw new InvalidQuantityException(quantity);
 		}
 
+		private static void ValidateState(Guid idWarehouse, string sku, int quantityAvailable, int quantityReserved)
+		{
+			if (idWarehouse == Guid.Empty) throw new Exceptions.StockItem.InvalidIdWarehouseException(idWarehouse);
+			if (string.IsNullOrWhiteSpace(sku)) throw new InvalidSkuException(sku);
+			if (quantityAvailable < 0) throw new InvalidQuantityException(quantityAvailable);
+			if (quantityReserved < 0 ) throw new InvalidQuantityException(quantityReserved);
+		}
+
+		
+		// Calculates how a stock removal should be distributed between
+		// available stock and reserved stock, minimizing the impact on
+		// active reservations.
+		//
+		// Business rule:
+		// Available stock is consumed first. Reserved stock is only
+		// reduced when available stock is insufficient.
+		//
+		// Note:
+		// Pending reservations are preserved and validated again during
+		// SellStock(). A reservation does not guarantee future stock
+		// availability after physical inventory adjustments.
+		private (int available, int reserved) CalculateMinimalRemoveImpact(int quantity)
+		{
+			// We ensure the operation is valid
+			if (QuantityTotal - quantity < 0) return (0, 0);
+
+			// We get the subtraction with less impact in reservations
+			int temp = QuantityAvailable - quantity;
+			
+			if (temp < 0) return (quantity + temp, Math.Abs(temp));
+			else return (quantity, 0);
+
+		}
 	}
 
 }

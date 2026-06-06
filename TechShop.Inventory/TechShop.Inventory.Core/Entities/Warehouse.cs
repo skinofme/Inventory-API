@@ -15,29 +15,57 @@ namespace TechShop.Inventory.Core.Entities
 		
 		public bool IsActive { get; private set; }
 		
-		protected Warehouse() { }
 
-		// constructor to create a new entity
-		public Warehouse(string code, string name, string location)
+		private Warehouse() { }
+
+		
+		public static Warehouse Create(string code, string name, string location)
 		{
-			if(string.IsNullOrWhiteSpace(code)) throw new InvalidWarehouseCodeException(code);
-			if(string.IsNullOrWhiteSpace(name)) throw new InvalidNameException(name);
-			if(string.IsNullOrWhiteSpace(location)) throw new InvalidLocationException(location);
-			IdWarehouse = Guid.NewGuid();
-			Code = code;
-			Name = name;
-			Location = location;
+			ValidateState(code, name, location);
+
+			return new Warehouse()
+			{
+				IdWarehouse = Guid.NewGuid(),
+				Code = code,
+				Name = name,
+				Location = location,
+				IsActive = true
+			};
+		}
+
+		internal static Warehouse Rehydrate(Guid idWarehouse, string code, string name, string location, bool isActive)
+		{
+			if (idWarehouse == Guid.Empty) throw new InvalidIdWarehouseException(idWarehouse);
+
+			ValidateState(code, name, location);
+
+			return new Warehouse()
+			{
+				IdWarehouse = idWarehouse,
+				Code = code,
+				Name = name,
+				Location = location,
+				IsActive = isActive
+			};
+		}
+
+		public void Activate()
+		{
+			if (IsActive) return;
 			IsActive = true;
 		}
 
-		// constructor to rehydrate the entity
-		internal Warehouse(Guid idWarehouse, string code, string name, string location, bool isActive)
-			:this(code, name, location)
+		public void Deactivate()
 		{
-			if (idWarehouse == Guid.Empty) throw new InvalidIdException(idWarehouse);
+			if (!IsActive) return;
+			IsActive = false;
+		}
 
-			IdWarehouse = idWarehouse;
-			IsActive = isActive;
+		private static void ValidateState(string code, string name, string location)
+		{
+			if (string.IsNullOrWhiteSpace(code)) throw new InvalidWarehouseCodeException(code);
+			if (string.IsNullOrWhiteSpace(name)) throw new InvalidNameException(name);
+			if (string.IsNullOrWhiteSpace(location)) throw new InvalidLocationException(location);
 		}
 	}
 }

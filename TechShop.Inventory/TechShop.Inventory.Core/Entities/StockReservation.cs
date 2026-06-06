@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using TechShop.Inventory.Core.Enums.StockReservation;
+﻿using TechShop.Inventory.Core.Enums.StockReservation;
 using TechShop.Inventory.Core.Exceptions.common;
 using TechShop.Inventory.Core.Exceptions.StockReservation;
 
@@ -23,57 +22,71 @@ namespace TechShop.Inventory.Core.Entities
 
 		public string? ReferenceId { get; private set; }
 
-		protected StockReservation() { }
 
-		// constructor to create a new entity
-		public StockReservation(
+		private StockReservation() { }
+
+
+		#region FACTORY METHODS
+
+		internal static StockReservation Create(
 			Guid idStockItem,
 			int quantity,
 			DateTime createdAt,
 			DateTime expiresAt,
-			string reason,
-			string referenceId)
+			string? reason,
+			string? referenceId)
 		{
-			ValidateConstructor(idStockItem, quantity, createdAt, expiresAt, reason, referenceId);
-			IdStockReservation = Guid.NewGuid();
-			IdStockItem = idStockItem;
-			Quantity = quantity;
-			CreatedAt = createdAt;
-			ExpiresAt = expiresAt;
-			Status = ReservationStatus.PENDING;
-			Reason = reason;
-			ReferenceId = referenceId;
+
+			ValidateState(idStockItem, quantity, createdAt, expiresAt);
+
+			return new StockReservation() {
+
+				IdStockReservation = Guid.NewGuid(),
+				IdStockItem = idStockItem,
+				Quantity = quantity,
+				CreatedAt = createdAt,
+				ExpiresAt = expiresAt,
+				Status = ReservationStatus.PENDING,
+				Reason = reason,
+				ReferenceId = referenceId
+			};
 		}
 
-		// constructor to rehydrate a entity
-		internal StockReservation(
+		internal static StockReservation Rehydrate(
 			Guid idStockReservation,
 			Guid idStockItem,
 			int quantity,
 			DateTime createdAt,
 			DateTime expiresAt,
 			ReservationStatus status,
-			string reason,
-			string referenceId)
+			string? reason,
+			string? referenceId)
 		{
 			if (idStockReservation == Guid.Empty) throw new InvalidIdStockReservationException(idStockReservation);
-			ValidateConstructor(idStockItem, quantity, createdAt, expiresAt, reason, referenceId);
+			ValidateState(idStockItem, quantity, createdAt, expiresAt);
 
-			IdStockReservation = idStockReservation;
-			IdStockItem = idStockItem;
-			Quantity = quantity;
-			CreatedAt = createdAt;
-			ExpiresAt = expiresAt;
-			Status = status;
-			Reason = reason;
-			ReferenceId = referenceId;
+			return new StockReservation()
+			{
+
+				IdStockReservation = idStockReservation,
+				IdStockItem = idStockItem,
+				Quantity = quantity,
+				CreatedAt = createdAt,
+				ExpiresAt = expiresAt,
+				Status = status,
+				Reason = reason,
+				ReferenceId = referenceId
+			};
 		}
 
-		// CONFIRMED
-		public void Confirm(DateTime now)
-		{
-			if (Status == ReservationStatus.CONFIRMED) return; // Idempotency
+		#endregion FACTORY METHODS
 
+
+		#region DOMAIN METHODS
+
+		
+		internal void Confirm(DateTime now)
+		{
 			if (Status != ReservationStatus.PENDING) 
 				throw new InvalidStockReservationStateException(Status, "Confirm");
 
@@ -82,39 +95,36 @@ namespace TechShop.Inventory.Core.Entities
 			Status = ReservationStatus.CONFIRMED;
 		}
 
-		// CANCELLED
-		public void Cancel()
+		
+		internal void Cancel()
 		{
-			if (Status == ReservationStatus.CANCELLED || Status == ReservationStatus.EXPIRED) // Idempotency
-				return;
-
 			if (Status != ReservationStatus.PENDING) 
-				throw new InvalidStockReservationStateException(Status, "Cancel");
+				throw new InvalidStockReservationStateException(Status, "Cancel"); // Only pending reservatin can expire
 
 			Status = ReservationStatus.CANCELLED;
 		}
 
-		// EXPIRED
-		public void Expire(DateTime now)
+		
+		internal void Expire(DateTime now)
 		{
-			if (Status == ReservationStatus.EXPIRED || Status == ReservationStatus.CANCELLED) return; // Idempotency
-
 			if (Status != ReservationStatus.PENDING)
-				throw new InvalidStockReservationStateException(Status, "Expire"); // Only pending reservation can be expired
+				throw new InvalidStockReservationStateException(Status, "Expire"); // Only pending reservation can expire
 
 			if (ExpiresAt > now )
-				throw new StockReservationNotExpiredException(ExpiresAt, now); // It cannot be expire before
+				throw new StockReservationNotExpiredException(ExpiresAt, now); // It cannot expire before
 
 			Status = ReservationStatus.EXPIRED;
 		}
 
-		private void ValidateConstructor(Guid idStockItem, int quantity, DateTime createdAt, DateTime expiresAt, string reason, string referenceId)
+		#endregion DOMAIN METHODS
+
+
+		private static void ValidateState(Guid idStockItem, int quantity, DateTime createdAt, DateTime expiresAt)
 		{
 			if (idStockItem == Guid.Empty) throw new InvalidIdStockItemException(idStockItem);
 			if (quantity <= 0) throw new InvalidQuantityException(quantity);
 			if (expiresAt <= createdAt) throw new InvalidExpirationDateException(expiresAt, createdAt);
-			if (string.IsNullOrWhiteSpace(reason)) throw new InvalidReasonException(reason);
-			if (string.IsNullOrWhiteSpace(referenceId)) throw new InvalidReferenceIdException(referenceId);
+
 		}
 
 	}

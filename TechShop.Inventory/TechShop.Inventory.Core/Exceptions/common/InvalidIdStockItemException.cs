@@ -1,4 +1,4 @@
-﻿namespace TechShop.Inventory.Core.Exceptions.StockReservation
+﻿namespace TechShop.Inventory.Core.Exceptions.common
 {
 	public class InvalidIdStockItemException : DomainException
 	{
