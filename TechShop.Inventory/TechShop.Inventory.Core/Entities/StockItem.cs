@@ -2,7 +2,6 @@
 using TechShop.Inventory.Core.Enums.StockReservation;
 using TechShop.Inventory.Core.Exceptions.common;
 using TechShop.Inventory.Core.Exceptions.StockItem;
-using TechShop.Inventory.Core.Exceptions.StockReservation;
 
 namespace TechShop.Inventory.Core.Entities
 {
