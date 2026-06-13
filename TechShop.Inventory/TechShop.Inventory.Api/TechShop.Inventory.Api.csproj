@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TechShop.Inventory.Application\TechShop.Inventory.Application.csproj" />
     <ProjectReference Include="..\TechShop.Inventory.Infrastructure\TechShop.Inventory.Infrastructure.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,6 @@
-﻿using TechShop.Inventory.Core.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using TechShop.Inventory.Core.Entities;
 using TechShop.Inventory.Core.Interfaces.Repositories;
-using TechShop.Inventory.Infrastructure.Exceptions.StockItemRepository;
 using TechShop.Inventory.Infrastructure.Persistence.Context;
 using TechShop.Inventory.Infrastructure.Persistence.Models;
 
@@ -30,10 +30,13 @@ namespace TechShop.Inventory.Infrastructure.Persistence.Repositories
 
 			await _context.StockItems.AddAsync(stockItemEntity);
 		}
-		public async Task<StockItem> GetByIdAsync(Guid id)
+		public async Task<StockItem?> GetByIdAsync(Guid id)
 		{
-			var stockItemEntity = await _context.StockItems.FindAsync(id);
-			if (stockItemEntity == null) throw new StockItemNotFoundException(id);
+			var stockItemEntity = await _context.StockItems
+				.AsNoTracking()
+				.SingleOrDefaultAsync(item => item.IdStockItem == id);
+
+			if (stockItemEntity == null) return null;
 
 			return StockItem.Rehydrate(
 				stockItemEntity.IdStockItem,
