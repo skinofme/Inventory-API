@@ -17,6 +17,7 @@ namespace TechShop.Inventory.Infrastructure
 				=> options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
 			services.AddScoped<IStockItemRepository, StockItemRepository>();
+			services.AddScoped<IWarehouseRepository, WarehouseRepository>();
 			services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 			return services;
