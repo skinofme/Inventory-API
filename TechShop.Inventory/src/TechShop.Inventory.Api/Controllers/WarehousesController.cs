@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TechShop.Inventory.Application.Features.Commands.Warehouses.CreateWarehouse;
+using TechShop.Inventory.Application.Features.Queries.Warehouses.GetWarehouseById;
 
 namespace TechShop.Inventory.Api.Controllers
 {
@@ -7,17 +8,25 @@ namespace TechShop.Inventory.Api.Controllers
 	[ApiController]
 	public class WarehousesController : ControllerBase
 	{
-		private CreateWarehouseCommandHandler _createWarehouseCommandHandler;
-		public WarehousesController(CreateWarehouseCommandHandler createWarehouseCommandHandler)
+		private readonly CreateWarehouseCommandHandler _createWarehouseCommandHandler;
+		private readonly GetWarehouseByIdQueryHandler _getWarehouseByIdQueryHandler;
+		public WarehousesController(
+			CreateWarehouseCommandHandler createWarehouseCommandHandler,
+			GetWarehouseByIdQueryHandler getWarehouseByIdQueryHandler
+		)
 		{
 			_createWarehouseCommandHandler = createWarehouseCommandHandler;
+			_getWarehouseByIdQueryHandler = getWarehouseByIdQueryHandler;
 		}
 
 		[HttpGet("{id:guid}")]
-		public async Task<IActionResult> GetById(Guid id) 
+		public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken) 
 		{
-			await Task.Delay(777);
-			throw new NotImplementedException();
+			var warehouse = await _getWarehouseByIdQueryHandler.Handle(new GetWarehouseByIdQuery(id), cancellationToken);
+
+			if (warehouse == null) return NotFound();
+
+			return Ok(warehouse);
 		}
 
 
