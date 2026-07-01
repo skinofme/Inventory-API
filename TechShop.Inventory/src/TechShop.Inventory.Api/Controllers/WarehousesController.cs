@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TechShop.Inventory.Application.Features.Commands.Warehouses.ActivateWarehouse;
 using TechShop.Inventory.Application.Features.Commands.Warehouses.CreateWarehouse;
 using TechShop.Inventory.Application.Features.Commands.Warehouses.DeactiveWarehouse;
 using TechShop.Inventory.Application.Features.Queries.Warehouses.GetWarehouseById;
@@ -14,18 +15,21 @@ namespace TechShop.Inventory.Api.Controllers
 		private readonly GetWarehouseByIdQueryHandler _getWarehouseByIdQueryHandler;
 		private readonly GetWarehousesQueryHandler _getWarehousesQueryHandler;
 		private readonly DeactivateWarehouseCommandHandler _deactivateWarehouseCommandHandler;
+		private readonly ActivateWarehouseCommandHandler _activateWarehouseCommandHandler;
 
 		public WarehousesController(
 			CreateWarehouseCommandHandler createWarehouseCommandHandler,
 			GetWarehouseByIdQueryHandler getWarehouseByIdQueryHandler,
 			GetWarehousesQueryHandler getWarehousesQueryHandler,
-			DeactivateWarehouseCommandHandler deactivateWarehouseCommandHandler
+			DeactivateWarehouseCommandHandler deactivateWarehouseCommandHandler,
+			ActivateWarehouseCommandHandler activateWarehouseCommandHandler
 		)
 		{
 			_createWarehouseCommandHandler = createWarehouseCommandHandler;
 			_getWarehouseByIdQueryHandler = getWarehouseByIdQueryHandler;
 			_getWarehousesQueryHandler = getWarehousesQueryHandler;
 			_deactivateWarehouseCommandHandler = deactivateWarehouseCommandHandler;
+			_activateWarehouseCommandHandler = activateWarehouseCommandHandler;
 		}
 
 
@@ -63,6 +67,14 @@ namespace TechShop.Inventory.Api.Controllers
 		{
 			await _deactivateWarehouseCommandHandler.Handle(new DeactivateWarehouseCommand(id), cancellationToken);
 			
+			return NoContent();
+		}
+
+		[HttpPatch("{id:guid}/activate")]
+		public async Task<IActionResult> Activate(Guid id, CancellationToken cancellationToken)
+		{
+			await _activateWarehouseCommandHandler.Handle(new ActivateWarehouseCommand(id), cancellationToken);
+
 			return NoContent();
 		}
 	}
